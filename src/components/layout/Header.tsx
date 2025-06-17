@@ -3,7 +3,7 @@ import { Icon } from "@iconify/react";
 import logo from "../../assets/logo.png";
 
 const HeaderContainer = styled.header`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -13,6 +13,12 @@ const HeaderContainer = styled.header`
   align-items: center;
   z-index: 100;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+  @media (min-width: 481px) {
+    max-width: 480px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 `;
 
 const LeftSection = styled.div`

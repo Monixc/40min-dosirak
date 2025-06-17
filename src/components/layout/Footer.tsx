@@ -6,19 +6,25 @@ interface FooterProps {
 }
 
 const FooterContainer = styled.footer<FooterProps>`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
   background: #242424;
   color: #fff;
   text-align: center;
   border-top: 1px solid #333;
-  width: 100%;
-  max-width: 480px;
-  height: 60px;
-  position: fixed;
-  bottom: 0;
   display: ${({ isVisible }) => (isVisible ? "flex" : "none")};
   align-items: center;
   justify-content: center;
   z-index: 100;
+
+  @media (min-width: 481px) {
+    max-width: 480px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 `;
 
 const Footer = () => {

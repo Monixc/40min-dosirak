@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Condiment from "./pages/Condiment";
 import Ingredient from "./pages/Ingredient";
 import Recipe from "./pages/Recipe";
+import GlobalStyle from "./styles/GlobalStyles";
 
 const router = createBrowserRouter([
   {
@@ -30,7 +31,12 @@ const router = createBrowserRouter([
   },
 ]);
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <GlobalStyle />
+      <RouterProvider router={router} />
+    </>
+  );
 }
 
 export default App;
