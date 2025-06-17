@@ -1,6 +1,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import type { Recipe } from "../types";
+import { Icon } from "@iconify/react";
+import { useState, useEffect } from "react";
 
 const Container = styled.div`
   padding: 24px;
@@ -28,6 +30,7 @@ const Table = styled.table`
   width: 100%;
   background: #222;
   border-radius: 8px;
+  margin-top: 12px;
   margin-bottom: 20px;
   border-collapse: collapse;
   th,
@@ -43,21 +46,102 @@ const Table = styled.table`
 `;
 
 const StepList = styled.ol`
+  margin-top: 12px;
   background: #222;
   border-radius: 8px;
-  padding: 16px;
+  padding: 14px;
   color: #fff;
+  word-break: break-word;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  font-size: 15px;
+  margin-bottom: 24px;
+  max-width: 100%;
+  box-sizing: border-box;
+`;
+
+const StepItem = styled.li`
+  margin-bottom: 6px;
+  line-height: 1.6;
+  list-style: none;
+`;
+
+const StepIndex = styled.span`
+  min-width: 2em;
+  text-align: right;
+  margin-right: 8px;
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+  flex-shrink: 0;
+`;
+
+const StepText = styled.span`
+  flex: 1 1 0;
+  word-break: break-word;
+  white-space: pre-line;
+`;
+
+const ActionRow = styled.div`
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
 `;
 
 const BackButton = styled.button`
-  margin-top: 24px;
-  padding: 8px 16px;
+  flex: 1 1 0;
+  padding: 16px 0;
   background: #444;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
+  font-size: 18px;
   cursor: pointer;
 `;
+
+const StarButton = styled.button<{ $active?: boolean }>`
+  width: 56px;
+  height: 56px;
+  background: #222;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 28px;
+  color: ${({ $active }) => ($active ? "#ffd700" : "#aaa")};
+  transition: background 0.2s, color 0.2s;
+  &:hover {
+    background: #333;
+  }
+`;
+
+const TipBox = styled.div`
+  background: #333;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+  white-space: pre-line;
+  font-size: 15px;
+  line-height: 1.6;
+`;
+
+const LIKED_RECIPES_KEY = "liked_recipes";
+
+function saveLikedRecipe(recipe: Recipe) {
+  const data = localStorage.getItem(LIKED_RECIPES_KEY);
+  let liked: Recipe[] = [];
+  if (data) {
+    try {
+      liked = JSON.parse(data);
+    } catch {}
+  }
+  // 중복 저장 방지 (id 기준)
+  if (!liked.some((r) => r.id === recipe.id)) {
+    liked = [recipe, ...liked];
+    localStorage.setItem(LIKED_RECIPES_KEY, JSON.stringify(liked));
+  }
+}
 
 function parseRecipeDetail(raw: string) {
   // [재료] ~ [조리 순서] 파싱
@@ -79,35 +163,70 @@ function parseRecipeDetail(raw: string) {
       });
   }
 
-  // 조리 순서 파싱
+  // 조리 순서와 팁 분리
   let steps: string[] = [];
+  let tipLines: string[] = [];
   if (stepMatch) {
-    steps = stepMatch[1]
+    const allSteps = stepMatch[1]
       .split("\n")
-      .map((l) => l.replace(/^\d+\.\s*/, "").trim())
+      .map((l) => l.replace(/^\d+(\.\d+)*\.\s*/, "").trim())
       .filter(Boolean);
+
+    allSteps.forEach((line) => {
+      if (
+        line.startsWith("※ 팁:") ||
+        line.startsWith("-") ||
+        line.startsWith("*")
+      ) {
+        tipLines.push(line);
+      } else {
+        steps.push(line);
+      }
+    });
   }
 
-  return { ingredients, steps };
+  const tip = tipLines.join("\n");
+
+  return { ingredients, steps, tip };
 }
 
 export default function RecipeDetail() {
   const location = useLocation();
   const navigate = useNavigate();
   const recipe = location.state as Recipe | undefined;
+  const [liked, setLiked] = useState(false);
+
+  useEffect(() => {
+    if (!recipe) return;
+    const data = localStorage.getItem(LIKED_RECIPES_KEY);
+    if (data) {
+      try {
+        const likedList: Recipe[] = JSON.parse(data);
+        setLiked(likedList.some((r) => r.id === recipe.id));
+      } catch {}
+    }
+  }, [recipe?.id]);
+
+  const handleLike = () => {
+    if (!recipe) return;
+    saveLikedRecipe(recipe);
+    setLiked(true);
+  };
 
   if (!recipe) {
     return <Container>레시피 정보를 찾을 수 없습니다.</Container>;
   }
 
-  const { ingredients, steps } = parseRecipeDetail(recipe.rawContent || "");
+  const { ingredients, steps, tip } = parseRecipeDetail(
+    recipe.rawContent || ""
+  );
 
   return (
     <Container>
       <Title>{recipe.title}</Title>
       <Date>{recipe.createdAt}</Date>
-      <Input>입력한 재료: {recipe.input}</Input>
-      <h3>재료</h3>
+      <Input> 프롬프트: {recipe.input}</Input>
+      <h3>🥕 재료</h3>
       <Table>
         <thead>
           <tr>
@@ -124,13 +243,32 @@ export default function RecipeDetail() {
           ))}
         </tbody>
       </Table>
-      <h3>조리 순서</h3>
+      <h3>🍳 조리 순서</h3>
       <StepList>
         {steps.map((step, i) => (
-          <li key={i}>{step}</li>
+          <StepItem key={i}>
+            <StepIndex>{i + 1}.</StepIndex>
+            <StepText>{step}</StepText>
+          </StepItem>
         ))}
       </StepList>
-      <BackButton onClick={() => navigate(-1)}>뒤로가기</BackButton>
+      {tip && (
+        <>
+          <h3>💡팁</h3>
+          <TipBox>{tip.replace(/^※\s*팁:\s*/, "")}</TipBox>
+        </>
+      )}
+      <ActionRow>
+        <BackButton onClick={() => navigate(-1)}>뒤로가기</BackButton>
+        <StarButton
+          aria-label="좋아요"
+          title="좋아요"
+          $active={liked}
+          onClick={handleLike}
+          disabled={liked}>
+          <Icon icon="mdi:star" width="32" height="32" />
+        </StarButton>
+      </ActionRow>
     </Container>
   );
 }

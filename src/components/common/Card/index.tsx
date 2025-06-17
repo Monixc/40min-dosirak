@@ -50,11 +50,11 @@ const CardInput = styled.div`
   color: #bbb;
   font-size: 14px;
   margin-bottom: 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: pre-line; // 여러 줄 허용
+  overflow: visible; // 잘리지 않게
+  text-overflow: initial; // ... 표시 제거
+  word-break: break-all; // 길면 줄바꿈
 `;
-
 const CardIngredients = styled.p`
   color: #999;
   margin-bottom: auto;

@@ -7,20 +7,23 @@ import logo from "../../assets/logo.png";
 const HeaderContainer = styled.header`
   position: fixed;
   top: 0;
-  left: 0;
   width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
   height: 60px;
   background: #242424;
-  display: flex;
-  align-items: center;
   z-index: 100;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+`;
 
-  @media (min-width: 481px) {
-    max-width: 480px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+const HeaderInner = styled.div`
+  max-width: 480px;
+  margin: 0 4px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
 `;
 
 const LeftSection = styled.div`
@@ -79,15 +82,17 @@ const Header = () => {
   return (
     <>
       <HeaderContainer>
-        <LeftSection>
-          <Logo src={logo} alt="도시락 로고" />
-          <Title>Dosirak</Title>
-        </LeftSection>
-        <RightSection>
-          <IconButton onClick={() => setIsModalOpen(true)}>
-            <Icon icon="mdi:key" width="24" height="24" />
-          </IconButton>
-        </RightSection>
+        <HeaderInner>
+          <LeftSection>
+            <Logo src={logo} alt="도시락 로고" />
+            <Title>Dosirak</Title>
+          </LeftSection>
+          <RightSection>
+            <IconButton onClick={() => setIsModalOpen(true)}>
+              <Icon icon="mdi:key" width="24" height="24" />
+            </IconButton>
+          </RightSection>
+        </HeaderInner>
       </HeaderContainer>
       <APIKeyModal
         isOpen={isModalOpen}
