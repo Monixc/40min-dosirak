@@ -1,5 +1,7 @@
+import { useState, useEffect } from "react";
 import styled from "styled-components";
 import { Icon } from "@iconify/react";
+import { APIKeyModal } from "../common/Modal";
 import logo from "../../assets/logo.png";
 
 const HeaderContainer = styled.header`
@@ -56,18 +58,44 @@ const IconButton = styled.button`
   }
 `;
 
-const Header = () => (
-  <HeaderContainer>
-    <LeftSection>
-      <Logo src={logo} alt="도시락 로고" />
-      <Title>Dosirak</Title>
-    </LeftSection>
-    <RightSection>
-      <IconButton>
-        <Icon icon="mdi:key" width="24" height="24" />
-      </IconButton>
-    </RightSection>
-  </HeaderContainer>
-);
+const Header = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAPIKeySubmit = (apiKey: string, shouldSave: boolean) => {
+    // storage 저장은 모달 컴포넌트에서 처리
+    setIsModalOpen(false);
+  };
+
+  // 컴포넌트 마운트 시 API 키 체크
+  useEffect(() => {
+    const savedKey =
+      localStorage.getItem("gpt_api_key") ||
+      sessionStorage.getItem("gpt_api_key");
+    if (!savedKey) {
+      setIsModalOpen(true);
+    }
+  }, []);
+
+  return (
+    <>
+      <HeaderContainer>
+        <LeftSection>
+          <Logo src={logo} alt="도시락 로고" />
+          <Title>Dosirak</Title>
+        </LeftSection>
+        <RightSection>
+          <IconButton onClick={() => setIsModalOpen(true)}>
+            <Icon icon="mdi:key" width="24" height="24" />
+          </IconButton>
+        </RightSection>
+      </HeaderContainer>
+      <APIKeyModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAPIKeySubmit}
+      />
+    </>
+  );
+};
 
 export default Header;
