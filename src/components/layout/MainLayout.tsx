@@ -1,7 +1,6 @@
 import { Outlet } from "react-router-dom";
 import styled from "styled-components";
 import Header from "./Header";
-import Footer from "./Footer";
 
 const LayoutWrapper = styled.div`
   width: 100%;
@@ -41,6 +40,22 @@ const Main = styled.main`
   padding-top: 60px;
   box-sizing: border-box;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ContentArea = styled.div`
+  flex: 1;
+`;
+
+const Footer = styled.footer`
+  width: 100%;
+  height: 60px;
+  background: #242424;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
 `;
 
 const MainLayout = () => (
@@ -48,9 +63,11 @@ const MainLayout = () => (
     <MobileContainer>
       <Header />
       <Main>
-        <Outlet />
+        <ContentArea>
+          <Outlet />
+        </ContentArea>
+        <Footer>©Monixc</Footer>
       </Main>
-      <Footer />
     </MobileContainer>
   </LayoutWrapper>
 );
