@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Condiment from "./pages/Condiment";
 import Ingredient from "./pages/Ingredient";
 import Recipe from "./pages/Recipe";
+import RecipeDetail from "./pages/RecipeDetail";
 import GlobalStyle from "./styles/GlobalStyles";
 
 const router = createBrowserRouter([
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
       {
         path: "recipe",
         element: <Recipe />,
+      },
+      {
+        path: "recipe-detail",
+        element: <RecipeDetail />,
       },
     ],
   },

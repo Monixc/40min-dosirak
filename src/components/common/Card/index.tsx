@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import type { Recipe } from "../../../types";
+import { useNavigate } from "react-router-dom";
 
 const CardWrapper = styled.div<{ $offset?: number }>`
   position: relative;
@@ -24,12 +25,34 @@ const CardHeader = styled.div`
 `;
 
 const CardTitle = styled.h3`
-  font-size: 20px;
+  font-size: 16px;
+  flex: 1 1 auto;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const CardDateTime = styled.div`
   color: #666;
-  font-size: 12px;
+  font-size: 13px;
+  min-width: 90px;
+  max-width: 90px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 12px;
+  flex-shrink: 0;
+`;
+
+const CardInput = styled.div`
+  color: #bbb;
+  font-size: 14px;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const CardIngredients = styled.p`
@@ -72,26 +95,38 @@ export const RecipeCard = ({
   onTouchEnd,
   currentIndex,
   totalRecipes,
-}: RecipeCardProps) => (
-  <CardWrapper
-    $offset={offset}
-    onTouchStart={onTouchStart}
-    onTouchMove={onTouchMove}
-    onTouchEnd={onTouchEnd}>
-    <CardHeader>
-      <CardTitle>{recipe.title}</CardTitle>
-      <CardDateTime>{recipe.createdAt}</CardDateTime>
-    </CardHeader>
-    <CardIngredients>{recipe.ingredients}</CardIngredients>
-    {totalRecipes > 1 && (
-      <DotContainer>
-        {Array.from({ length: totalRecipes }).map((_, index) => (
-          <Dot key={index} active={currentIndex === index} />
-        ))}
-      </DotContainer>
-    )}
-  </CardWrapper>
-);
+}: RecipeCardProps) => {
+  const dateOnly = recipe.createdAt.split(" ")[0];
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate("/recipe-detail", { state: recipe });
+  };
+
+  return (
+    <CardWrapper
+      $offset={offset}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onClick={handleClick}
+      style={{ cursor: "pointer" }}>
+      <CardHeader>
+        <CardTitle title={recipe.title}>{recipe.title}</CardTitle>
+        <CardDateTime>{dateOnly}</CardDateTime>
+      </CardHeader>
+      <CardInput title={recipe.input}>{recipe.input}</CardInput>
+      <CardIngredients>{recipe.ingredients}</CardIngredients>
+      {totalRecipes > 1 && (
+        <DotContainer>
+          {Array.from({ length: totalRecipes }).map((_, index) => (
+            <Dot key={index} active={currentIndex === index} />
+          ))}
+        </DotContainer>
+      )}
+    </CardWrapper>
+  );
+};
 
 export const EmptyCard = () => (
   <CardWrapper>

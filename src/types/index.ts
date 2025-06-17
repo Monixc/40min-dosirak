@@ -3,4 +3,6 @@ export interface Recipe {
   title: string;
   ingredients: string;
   createdAt: string;
+  input: string;
+  rawContent?: string;
 }

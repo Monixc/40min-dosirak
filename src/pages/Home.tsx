@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { TouchEvent } from "react";
 import { RecipeCard, EmptyCard } from "../components/common/Card";
 import { Input, Button } from "../components/common/Input";
@@ -12,38 +12,30 @@ import {
   IngredientBox,
 } from "../components/common/Grid";
 import type { Recipe } from "../types";
+import { generateRecipe } from "../services/openai";
 
 const Container = styled.div`
   padding: 20px;
 `;
 
-// 임시 데이터 (테스트용으로 3개만)
-const tempCards: Recipe[] = [
-  {
-    id: 1,
-    title: "김치볶음밥",
-    ingredients: "김치, 밥, 참기름",
-    createdAt: "2024-03-15 14:30",
-  },
-  {
-    id: 2,
-    title: "계란말이",
-    ingredients: "계란, 대파, 식용유",
-    createdAt: "2024-03-15 15:45",
-  },
-  {
-    id: 3,
-    title: "된장찌개",
-    ingredients: "된장, 두부, 애호박",
-    createdAt: "2024-03-15 16:20",
-  },
-  {
-    id: 4,
-    title: "된장찌개",
-    ingredients: "된장, 두부, 애호박",
-    createdAt: "2024-03-15 16:20",
-  },
-];
+const RECIPE_STORAGE_KEY = "recent_recipes";
+
+function saveRecipesToStorage(recipes: Recipe[]) {
+  localStorage.setItem(RECIPE_STORAGE_KEY, JSON.stringify(recipes));
+}
+
+function loadRecipesFromStorage(): Recipe[] {
+  const data = localStorage.getItem(RECIPE_STORAGE_KEY);
+  if (!data) return [];
+  try {
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
+
+const savedCondiments = ["간장", "고추장", "된장", "소금", "후추"];
+const savedIngredients = ["당근", "양파", "대파", "마늘", "생강"];
 
 const Home = () => {
   const navigate = useNavigate();
@@ -51,6 +43,14 @@ const Home = () => {
   const touchStart = useRef(0);
   const touchEnd = useRef(0);
   const [offsetX, setOffsetX] = useState(0);
+  const [ingredients, setIngredients] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+
+  useEffect(() => {
+    setRecipes(loadRecipesFromStorage());
+  }, []);
 
   const handleTouchStart = (e: TouchEvent) => {
     touchStart.current = e.touches[0].clientX;
@@ -68,7 +68,7 @@ const Home = () => {
     const minSwipeDistance = 50; // 최소 스와이프 거리
 
     if (Math.abs(diff) > minSwipeDistance) {
-      if (diff > 0 && currentCard < tempCards.length - 1) {
+      if (diff > 0 && currentCard < recipes.length - 1) {
         // 왼쪽으로 스와이프
         setCurrentCard((prev) => prev + 1);
       } else if (diff < 0 && currentCard > 0) {
@@ -79,21 +79,104 @@ const Home = () => {
     setOffsetX(0);
   };
 
-  const formatDateTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}`;
+  const formatDateTime = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  };
+
+  const parseRecipeContent = (content: string) => {
+    const lines = content.split("\n");
+    let title = "";
+    let ingredients = "";
+
+    for (const line of lines) {
+      if (line.startsWith("[레시피 제목]")) {
+        title = lines[lines.indexOf(line) + 1].trim();
+      } else if (line.startsWith("[재료]")) {
+        const startIndex = lines.indexOf(line) + 1;
+        const endIndex = lines.findIndex(
+          (l, i) => i > startIndex && l.startsWith("[")
+        );
+        ingredients = lines
+          .slice(startIndex, endIndex > -1 ? endIndex : undefined)
+          .filter((l) => l.trim() && !l.includes("|"))
+          .join(", ");
+      }
+    }
+
+    return { title, ingredients };
+  };
+
+  const handleGenerateRecipe = async () => {
+    if (!ingredients.trim()) {
+      setError("재료를 입력해주세요.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const inputIngredients = ingredients.split(",").map((i) => i.trim());
+      const recipeContent = await generateRecipe(
+        inputIngredients,
+        savedCondiments,
+        savedIngredients
+      );
+
+      if (!recipeContent) {
+        throw new Error("레시피 생성에 실패했습니다.");
+      }
+
+      const { title, ingredients: parsedIngredients } =
+        parseRecipeContent(recipeContent);
+
+      const newRecipe: Recipe = {
+        id: Date.now(),
+        title: title,
+        ingredients: parsedIngredients,
+        createdAt: formatDateTime(new Date()),
+        input: ingredients,
+        rawContent: recipeContent,
+      };
+
+      setRecipes((prev) => {
+        const next = [newRecipe, ...prev].slice(0, 5);
+        saveRecipesToStorage(next);
+        return next;
+      });
+      setCurrentCard(0);
+      setIngredients("");
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "알 수 없는 오류가 발생했습니다."
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Container>
       <Title>레시피 생성하기</Title>
       <InputWrapper>
-        <Input placeholder="재료를 입력하세요" />
-        <Button>생성</Button>
+        <Input
+          placeholder="재료를 입력하세요 (쉼표로 구분)"
+          value={ingredients}
+          onChange={(e) => setIngredients(e.target.value)}
+        />
+        <Button onClick={handleGenerateRecipe} disabled={isLoading}>
+          {isLoading ? "생성 중..." : "생성"}
+        </Button>
       </InputWrapper>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
 
       <SectionTitle>
         <span>🕒</span>
@@ -101,15 +184,15 @@ const Home = () => {
       </SectionTitle>
 
       <SlideContainer>
-        {tempCards.length > 0 ? (
+        {recipes.length > 0 ? (
           <RecipeCard
-            recipe={tempCards[currentCard]}
+            recipe={recipes[currentCard]}
             offset={offsetX}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             currentIndex={currentCard}
-            totalRecipes={tempCards.length}
+            totalRecipes={recipes.length}
           />
         ) : (
           <EmptyCard />
@@ -158,4 +241,10 @@ const SlideContainer = styled.div`
   margin: 0;
   overflow: hidden;
   touch-action: pan-y pinch-zoom;
+`;
+
+const ErrorMessage = styled.p`
+  color: #ff6b6b;
+  font-size: 14px;
+  margin-top: 8px;
 `;
