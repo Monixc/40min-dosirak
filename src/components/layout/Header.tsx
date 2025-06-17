@@ -85,7 +85,7 @@ const Header = () => {
         <HeaderInner>
           <LeftSection>
             <Logo src={logo} alt="도시락 로고" />
-            <Title>Dosirak</Title>
+            <Title>40분 도시락</Title>
           </LeftSection>
           <RightSection>
             <IconButton onClick={() => setIsModalOpen(true)}>
