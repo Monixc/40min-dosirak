@@ -70,7 +70,7 @@ const MainLayout = () => {
           <ContentArea>
             <Outlet />
           </ContentArea>
-          {showFooter && <Footer>©Monixc</Footer>}
+          {showFooter && <Footer>©킁킁잉</Footer>}
         </Main>
       </MobileContainer>
     </LayoutWrapper>
