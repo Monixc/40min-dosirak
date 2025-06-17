@@ -117,7 +117,7 @@ export const RecipeCard = ({
       </CardHeader>
       <CardInput title={recipe.input}>{recipe.input}</CardInput>
       <CardIngredients>{recipe.ingredients}</CardIngredients>
-      {totalRecipes > 1 && (
+      {totalRecipes > 1 && currentIndex >= 0 && (
         <DotContainer>
           {Array.from({ length: totalRecipes }).map((_, index) => (
             <Dot key={index} active={currentIndex === index} />

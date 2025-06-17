@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import Header from "./Header";
 
@@ -58,18 +58,23 @@ const Footer = styled.footer`
   color: #fff;
 `;
 
-const MainLayout = () => (
-  <LayoutWrapper>
-    <MobileContainer>
-      <Header />
-      <Main>
-        <ContentArea>
-          <Outlet />
-        </ContentArea>
-        <Footer>©Monixc</Footer>
-      </Main>
-    </MobileContainer>
-  </LayoutWrapper>
-);
+const MainLayout = () => {
+  const location = useLocation();
+  const showFooter = location.pathname === "/";
+
+  return (
+    <LayoutWrapper>
+      <MobileContainer>
+        <Header />
+        <Main>
+          <ContentArea>
+            <Outlet />
+          </ContentArea>
+          {showFooter && <Footer>©Monixc</Footer>}
+        </Main>
+      </MobileContainer>
+    </LayoutWrapper>
+  );
+};
 
 export default MainLayout;
