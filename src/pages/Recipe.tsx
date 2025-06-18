@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { RecipeCard, EmptyCard } from "../components/common/Card";
+import { SquareCard } from "../components/common/Card/SquareCard";
 import type { Recipe } from "../types";
 import styled from "styled-components";
 
@@ -35,6 +36,13 @@ const Title = styled.h2`
   font-size: 22px;
   color: #fff;
   margin-bottom: 12px;
+`;
+
+const GridContainer = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
 `;
 
 export default function Recipe() {
@@ -75,19 +83,11 @@ export default function Recipe() {
         <EmptyCard />
       ) : (
         <>
-          {likedRecipes.slice(0, visibleCount).map((recipe, idx) => (
-            <div key={recipe.id} style={{ marginBottom: 16 }}>
-              <RecipeCard
-                recipe={recipe}
-                offset={0}
-                onTouchStart={() => {}}
-                onTouchMove={() => {}}
-                onTouchEnd={() => {}}
-                currentIndex={-1}
-                totalRecipes={0}
-              />
-            </div>
-          ))}
+          <GridContainer>
+            {likedRecipes.slice(0, visibleCount).map((recipe) => (
+              <SquareCard key={recipe.id} recipe={recipe} />
+            ))}
+          </GridContainer>
           <div ref={listEndRef} />
         </>
       )}
