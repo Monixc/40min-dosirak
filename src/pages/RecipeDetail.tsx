@@ -224,7 +224,7 @@ function parseRecipeDetail(raw: string) {
 
     allSteps.forEach((line) => {
       if (
-        line.startsWith("※ 팁:") ||
+        line.startsWith("[팁]") ||
         line.startsWith("-") ||
         line.startsWith("*")
       ) {
@@ -361,7 +361,7 @@ export default function RecipeDetail() {
       {tip && (
         <>
           <h3>💡팁</h3>
-          <TipBox>{tip.replace(/^※\s*팁:\s*/, "")}</TipBox>
+          <TipBox>{tip.replace(/^\[?팁\]?[:：]?/i, "").trim()}</TipBox>
         </>
       )}
       <ActionRow>

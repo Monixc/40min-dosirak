@@ -1,54 +1,64 @@
 import OpenAI from "openai";
 
-export const createOpenAIInstance = (apiKey: string) => {
+function createOpenAIInstance(apiKey: string) {
   return new OpenAI({
     apiKey,
     dangerouslyAllowBrowser: true,
   });
-};
+}
 
-export const generateRecipe = async (
-  ingredients: string[],
+export async function generateRecipe(
+  requestText: string,
   condiments: string[],
   availableIngredients: string[]
-) => {
+): Promise<string | null> {
   const apiKey =
     localStorage.getItem("gpt_api_key") ||
     sessionStorage.getItem("gpt_api_key");
-  if (!apiKey) throw new Error("API 키가 설정되지 않았습니다.");
 
-  const openai = createOpenAIInstance(apiKey);
+  if (!apiKey) {
+    throw new Error("API 키가 설정되지 않았습니다.");
+  }
 
   const prompt = `
-도시락 레시피를 생성해주세요.
+당신은 사용자의 요청과 보유 재료를 바탕으로 최고의 레시피를 제안하는 요리 전문가입니다.
 
-조건:
-1. 40분 이내 완성 가능한 레시피
-2. 아래 재료들만 사용 가능:
-   - 주재료: ${ingredients.join(", ")}
-   - 조미료: ${condiments.join(", ")}
-   - 가용 식재료: ${availableIngredients.join(", ")}
-3. 단순 조리(구이, 찜, 삶기)가 아닌 정교한 레시피 제공
-4. 아래 형식으로 응답:
+**[사용자 요청 사항]**
+"${requestText}"
 
+**[엄격한 조건]**
+1.  **레시피 생성**: 위의 **[사용자 요청 사항]**을 최우선으로 해석하고, 아래 **[보유 재료 목록]**을 참고하여 40분 안에 완성할 수 있는 창의적이고 정교한 레시피 1개를 제안해주세요.
+2.  **재료 사용**:
+    *   **[사용자 요청 사항]**에 언급된 재료를 우선적으로 사용해야 합니다.
+    *   목록에 없는 재료는 **절대** 사용해서는 안 됩니다. 만약 요청 사항에 없는 재료가 필요하다면, **[보유 재료 목록]**에서 가장 적절한 것을 활용하세요.
+    *   만약 **[보유 재료 목록]**으로 요리가 불가능하다면, "현재 보유한 재료로는 해당 요리를 만들기 어렵습니다." 라고 응답해주세요.
+3.  **레시피 종류**: 사용자의 요청이 명확하지 않다면, 한식, 양식, 중식, 일식 등 다양한 종류의 정교한 레시피를 자유롭게 제안해주세요.
+4.  **응답 형식**: 반드시 아래의 형식에 맞춰 한글로만 응답해주세요. 각 섹션의 제목(예: '[레시피 제목]')은 그대로 유지해야 합니다.
+
+**[보유 재료 목록]**
+*   **보유 조미료**: ${condiments.join(", ")}
+*   **보유 식재료**: ${availableIngredients.join(", ")}
+
+**[응답 형식]**
 [레시피 제목]
-예시: 김치찜, 계란말이, 된장찌개 등
+(여기에 생성된 레시피의 제목을 입력)
 
 [재료]
 재료명 | 용량
-예시:
-당근 | 1/2개
-간장 | 2큰술
+(여기에 필요한 재료와 정확한 용량을 '재료명 | 용량' 형식으로 나열)
 
 [조리 순서]
-1. 첫 번째 단계
-2. 두 번째 단계
+1. (첫 번째 조리 단계 설명)
+2. (두 번째 조리 단계 설명)
 ...
 
-한글로 응답해주세요.
+[팁]
+(여기에 요리 팁, 대체 가능한 재료, 또는 보관 방법 등을 자유롭게 작성)
 `;
 
   try {
+    const openai = createOpenAIInstance(apiKey);
+
     const response = await openai.chat.completions.create({
       model: "gpt-4.1",
       messages: [
@@ -66,9 +76,8 @@ export const generateRecipe = async (
     });
 
     return response.choices[0].message.content;
-    console.log(response.choices[0].message.content);
   } catch (error) {
     console.error("레시피 생성 오류:", error);
     throw new Error("레시피 생성 중 오류가 발생했습니다.");
   }
-};
+}

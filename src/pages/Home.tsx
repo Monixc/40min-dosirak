@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
 import type { TouchEvent } from "react";
@@ -13,6 +13,7 @@ import {
 } from "../components/common/Grid";
 import type { Recipe } from "../types";
 import { generateRecipe } from "../services/openai";
+import logo from "../assets/logo.png";
 
 const Container = styled.div`
   padding: 16px;
@@ -34,8 +35,41 @@ function loadRecipesFromStorage(): Recipe[] {
   }
 }
 
-const savedCondiments = ["간장", "고추장", "된장", "소금", "후추"];
-const savedIngredients = ["당근", "양파", "대파", "마늘", "생강"];
+function getCheckedCondiments() {
+  const data = localStorage.getItem("my_condiments");
+  if (!data) return [];
+  try {
+    return JSON.parse(data)
+      .filter((item: any) => item.checked)
+      .map((item: any) => item.name);
+  } catch {
+    return [];
+  }
+}
+
+function getCheckedIngredients() {
+  const data = localStorage.getItem("my_ingredients");
+  if (!data) return [];
+  try {
+    return JSON.parse(data)
+      .filter((item: any) => item.checked)
+      .map((item: any) => item.name);
+  } catch {
+    return [];
+  }
+}
+
+const spin = keyframes`
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
+const RotatingLogo = styled.img`
+  width: 16px;
+  height: 16px;
+  animation: ${spin} 1.5s linear infinite;
+`;
 
 const Home = () => {
   const navigate = useNavigate();
@@ -43,7 +77,7 @@ const Home = () => {
   const touchStart = useRef(0);
   const touchEnd = useRef(0);
   const [offsetX, setOffsetX] = useState(0);
-  const [ingredients, setIngredients] = useState<string>("");
+  const [requestText, setRequestText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -113,8 +147,8 @@ const Home = () => {
   };
 
   const handleGenerateRecipe = async () => {
-    if (!ingredients.trim()) {
-      setError("재료를 입력해주세요.");
+    if (!requestText.trim()) {
+      setError("원하는 요리를 입력해주세요.");
       return;
     }
 
@@ -122,11 +156,12 @@ const Home = () => {
     setError(null);
 
     try {
-      const inputIngredients = ingredients.split(",").map((i) => i.trim());
+      const condiments = getCheckedCondiments();
+      const myIngredients = getCheckedIngredients();
       const recipeContent = await generateRecipe(
-        inputIngredients,
-        savedCondiments,
-        savedIngredients
+        requestText,
+        condiments,
+        myIngredients
       );
 
       if (!recipeContent) {
@@ -141,7 +176,7 @@ const Home = () => {
         title: title,
         ingredients: parsedIngredients,
         createdAt: formatDateTime(new Date()),
-        input: ingredients,
+        input: requestText,
         rawContent: recipeContent,
       };
 
@@ -151,7 +186,7 @@ const Home = () => {
         return next;
       });
       setCurrentCard(0);
-      setIngredients("");
+      setRequestText("");
     } catch (error) {
       setError(
         error instanceof Error
@@ -168,12 +203,12 @@ const Home = () => {
       <Title>레시피 생성하기</Title>
       <InputWrapper>
         <Input
-          placeholder="재료를 입력하세요 (쉼표로 구분)"
-          value={ingredients}
-          onChange={(e) => setIngredients(e.target.value)}
+          placeholder="어떤 요리를 만들어 볼까요?"
+          value={requestText}
+          onChange={(e) => setRequestText(e.target.value)}
         />
         <Button onClick={handleGenerateRecipe} disabled={isLoading}>
-          {isLoading ? "생성 중..." : "생성"}
+          {isLoading ? <RotatingLogo src={logo} alt="로딩 중..." /> : "생성"}
         </Button>
       </InputWrapper>
       {error && <ErrorMessage>{error}</ErrorMessage>}
@@ -200,13 +235,18 @@ const Home = () => {
       </SlideContainer>
 
       <GridContainer>
-        <LeftBox onClick={() => navigate("/recipe")}>레시피</LeftBox>
+        <LeftBox onClick={() => navigate("/recipe")}>
+          <span style={{ fontSize: "2rem" }}>⭐</span>
+          <div>레시피</div>
+        </LeftBox>
         <RightColumn>
           <CondimentBox onClick={() => navigate("/condiment")}>
-            조미료
+            <span style={{ fontSize: "2rem" }}>🧂</span>
+            <div>조미료</div>
           </CondimentBox>
           <IngredientBox onClick={() => navigate("/ingredient")}>
-            식재료
+            <span style={{ fontSize: "2rem" }}>🥦</span>
+            <div>식재료</div>
           </IngredientBox>
         </RightColumn>
       </GridContainer>

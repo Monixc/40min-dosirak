@@ -112,7 +112,9 @@ export const RecipeCard = ({
       onClick={handleClick}
       style={{ cursor: "pointer" }}>
       <CardHeader>
-        <CardTitle title={recipe.title}>{recipe.title}</CardTitle>
+        <CardTitle title={recipe.title}>
+          {recipe.title || "제목 없음"}
+        </CardTitle>
         <CardDateTime>{dateOnly}</CardDateTime>
       </CardHeader>
       <CardInput title={recipe.input}>{recipe.input}</CardInput>

@@ -71,7 +71,9 @@ export const SquareCard = ({ recipe }: SquareCardProps) => {
   return (
     <SquareCardWrapper onClick={handleClick} style={{ position: "relative" }}>
       <div>
-        <Title title={recipe.title}>{recipe.title}</Title>
+        <Title title={recipe.title || "제목 없음"}>
+          {recipe.title || "제목 없음"}
+        </Title>
         <DateText>{dateOnly}</DateText>
         <InputText title={recipe.input}>{recipe.input}</InputText>
       </div>

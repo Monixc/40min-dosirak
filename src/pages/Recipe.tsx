@@ -62,12 +62,6 @@ export default function Recipe() {
     }
   }, []);
 
-  const handleRemoveLike = (id: number) => {
-    const updated = likedRecipes.filter((r) => r.id !== id);
-    setLikedRecipes(updated);
-    localStorage.setItem(LIKED_RECIPES_KEY, JSON.stringify(updated));
-  };
-
   const handleScroll = useCallback(() => {
     if (
       listEndRef.current &&
@@ -91,11 +85,7 @@ export default function Recipe() {
         <>
           <GridContainer>
             {likedRecipes.slice(0, visibleCount).map((recipe) => (
-              <SquareCard
-                key={recipe.id}
-                recipe={recipe}
-                onRemoveLike={handleRemoveLike}
-              />
+              <SquareCard key={recipe.id} recipe={recipe} />
             ))}
           </GridContainer>
           <div ref={listEndRef} />
