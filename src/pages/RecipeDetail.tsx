@@ -85,7 +85,7 @@ const StepText = styled.span`
 const ActionRow = styled.div`
   position: fixed;
   left: 50%;
-  transform: translateX(-50.5%);
+  transform: translateX(-50%);
   bottom: 0;
   width: 100%;
   display: flex;
