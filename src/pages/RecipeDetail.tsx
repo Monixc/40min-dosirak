@@ -84,20 +84,24 @@ const StepText = styled.span`
 
 const ActionRow = styled.div`
   position: fixed;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50.5%);
   bottom: 0;
-  width: 100vw;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px 0 24px 0;
+  box-sizing: border-box;
+`;
+
+const ActionRowInner = styled.div`
+  width: 100%;
   max-width: 480px;
-  margin: 0 auto;
   display: flex;
   gap: 12px;
-
-  padding: 16px 16px 24px 16px;
+  padding: 0 16px;
   box-sizing: border-box;
-  z-index: 100;
-  justify-content: center;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
 `;
 
 const BackButton = styled.button`
@@ -116,7 +120,7 @@ const StarButton = styled.button<{ $active?: boolean }>`
   height: 56px;
   background: #444;
   border: none;
-  border-radius: 12px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -328,57 +332,63 @@ export default function RecipeDetail() {
   );
 
   return (
-    <Container>
-      <Title>{recipe.title}</Title>
-      <Date>{recipe.createdAt}</Date>
-      <Input> 프롬프트: {recipe.input}</Input>
-      <h3>🥕 재료</h3>
-      <Table>
-        <thead>
-          <tr>
-            <th>재료명</th>
-            <th>용량</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ingredients.map((row, i) => (
-            <tr key={i}>
-              <td>{row.name}</td>
-              <td>{row.amount}</td>
+    <>
+      <Container>
+        <Title>{recipe.title}</Title>
+        <Date>{recipe.createdAt}</Date>
+        <Input> 프롬프트: {recipe.input}</Input>
+        <h3>🥕 재료</h3>
+        <Table>
+          <thead>
+            <tr>
+              <th>재료명</th>
+              <th>용량</th>
             </tr>
+          </thead>
+          <tbody>
+            {ingredients.map((row, i) => (
+              <tr key={i}>
+                <td>{row.name}</td>
+                <td>{row.amount}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+        <h3>🍳 조리 순서</h3>
+        <StepList>
+          {steps.map((step, i) => (
+            <StepItem key={i}>
+              <StepIndex>{i + 1}.</StepIndex>
+              <StepText>{step}</StepText>
+            </StepItem>
           ))}
-        </tbody>
-      </Table>
-      <h3>🍳 조리 순서</h3>
-      <StepList>
-        {steps.map((step, i) => (
-          <StepItem key={i}>
-            <StepIndex>{i + 1}.</StepIndex>
-            <StepText>{step}</StepText>
-          </StepItem>
-        ))}
-      </StepList>
-      {tip && (
-        <>
-          <h3>💡팁</h3>
-          <TipBox>{tip.replace(/^\[?팁\]?[:：]?/i, "").trim()}</TipBox>
-        </>
-      )}
+        </StepList>
+        {tip && (
+          <>
+            <h3>💡팁</h3>
+            <TipBox>{tip.replace(/^\[?팁\]?[:：]?/i, "").trim()}</TipBox>
+          </>
+        )}
+      </Container>
+
       <ActionRow>
-        <BackButton onClick={() => navigate(-1)}>뒤로가기</BackButton>
-        <StarButton
-          aria-label="좋아요"
-          title="좋아요"
-          $active={liked}
-          onClick={handleLike}>
-          <Icon icon="mdi:star" width="32" height="32" />
-        </StarButton>
+        <ActionRowInner>
+          <BackButton onClick={() => navigate(-1)}>뒤로가기</BackButton>
+          <StarButton
+            aria-label="좋아요"
+            title="좋아요"
+            $active={liked}
+            onClick={handleLike}>
+            <Icon icon="mdi:star" width="32" height="32" />
+          </StarButton>
+        </ActionRowInner>
       </ActionRow>
+
       <ConfirmModal
         open={showConfirm}
         onConfirm={handleConfirmRemove}
         onCancel={() => setShowConfirm(false)}
       />
-    </Container>
+    </>
   );
 }
