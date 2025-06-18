@@ -69,7 +69,7 @@ export const SquareCard = ({ recipe }: SquareCardProps) => {
   };
 
   return (
-    <SquareCardWrapper onClick={handleClick}>
+    <SquareCardWrapper onClick={handleClick} style={{ position: "relative" }}>
       <div>
         <Title title={recipe.title}>{recipe.title}</Title>
         <DateText>{dateOnly}</DateText>

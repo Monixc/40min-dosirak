@@ -12,7 +12,7 @@ const FixedBackButton = styled.button`
   left: 50%;
   transform: translateX(-50%);
   bottom: 24px;
-  width: calc(100% - 40px);
+  width: calc(100% - 32px);
   max-width: 440px;
   padding: 16px 0;
   background: #444;
@@ -26,7 +26,7 @@ const FixedBackButton = styled.button`
 `;
 
 const PageContainer = styled.div`
-  padding: 20px;
+  padding: 16px;
   max-width: 480px;
   margin: 0 auto;
   padding-bottom: 120px;
@@ -62,6 +62,12 @@ export default function Recipe() {
     }
   }, []);
 
+  const handleRemoveLike = (id: number) => {
+    const updated = likedRecipes.filter((r) => r.id !== id);
+    setLikedRecipes(updated);
+    localStorage.setItem(LIKED_RECIPES_KEY, JSON.stringify(updated));
+  };
+
   const handleScroll = useCallback(() => {
     if (
       listEndRef.current &&
@@ -85,7 +91,11 @@ export default function Recipe() {
         <>
           <GridContainer>
             {likedRecipes.slice(0, visibleCount).map((recipe) => (
-              <SquareCard key={recipe.id} recipe={recipe} />
+              <SquareCard
+                key={recipe.id}
+                recipe={recipe}
+                onRemoveLike={handleRemoveLike}
+              />
             ))}
           </GridContainer>
           <div ref={listEndRef} />

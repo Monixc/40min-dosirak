@@ -5,8 +5,9 @@ import { Icon } from "@iconify/react";
 import { useState, useEffect } from "react";
 
 const Container = styled.div`
-  padding: 24px;
+  padding: 16px;
   color: #fff;
+  padding-bottom: 120px;
 `;
 
 const Title = styled.h2`
@@ -82,9 +83,21 @@ const StepText = styled.span`
 `;
 
 const ActionRow = styled.div`
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100vw;
+  max-width: 480px;
+  margin: 0 auto;
   display: flex;
   gap: 12px;
-  margin-top: 32px;
+
+  padding: 16px 16px 24px 16px;
+  box-sizing: border-box;
+  z-index: 100;
+  justify-content: center;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
 `;
 
 const BackButton = styled.button`
@@ -101,7 +114,7 @@ const BackButton = styled.button`
 const StarButton = styled.button<{ $active?: boolean }>`
   width: 56px;
   height: 56px;
-  background: #222;
+  background: #444;
   border: none;
   border-radius: 12px;
   display: flex;
@@ -124,6 +137,43 @@ const TipBox = styled.div`
   white-space: pre-line;
   font-size: 15px;
   line-height: 1.6;
+`;
+
+const ConfirmModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+`;
+const ConfirmModalBox = styled.div`
+  background: #232323;
+  border-radius: 12px;
+  padding: 32px 24px 24px 24px;
+  max-width: 320px;
+  width: 90vw;
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+`;
+const ConfirmModalButtonRow = styled.div`
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: center;
+`;
+const ConfirmButton = styled.button`
+  flex: 1 1 0;
+  padding: 12px 0;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
 `;
 
 const LIKED_RECIPES_KEY = "liked_recipes";
@@ -190,11 +240,47 @@ function parseRecipeDetail(raw: string) {
   return { ingredients, steps, tip };
 }
 
+function ConfirmModal({
+  open,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <ConfirmModalOverlay>
+      <ConfirmModalBox>
+        <div style={{ marginBottom: 12 }}>
+          저장된 레시피가 삭제됩니다.
+          <br />
+          취소하시겠습니까?
+        </div>
+        <ConfirmModalButtonRow>
+          <ConfirmButton
+            style={{ background: "#ff6b6b", color: "#fff" }}
+            onClick={onConfirm}>
+            확인
+          </ConfirmButton>
+          <ConfirmButton
+            style={{ background: "#444", color: "#fff" }}
+            onClick={onCancel}>
+            취소
+          </ConfirmButton>
+        </ConfirmModalButtonRow>
+      </ConfirmModalBox>
+    </ConfirmModalOverlay>
+  );
+}
+
 export default function RecipeDetail() {
   const location = useLocation();
   const navigate = useNavigate();
   const recipe = location.state as Recipe | undefined;
   const [liked, setLiked] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (!recipe) return;
@@ -209,8 +295,28 @@ export default function RecipeDetail() {
 
   const handleLike = () => {
     if (!recipe) return;
+    if (liked) {
+      setShowConfirm(true);
+      return;
+    }
     saveLikedRecipe(recipe);
     setLiked(true);
+  };
+
+  const handleConfirmRemove = () => {
+    if (!recipe) return;
+    // 로컬스토리지에서 삭제
+    const data = localStorage.getItem(LIKED_RECIPES_KEY);
+    if (data) {
+      try {
+        const likedList: Recipe[] = JSON.parse(data);
+        const updated = likedList.filter((r) => r.id !== recipe.id);
+        localStorage.setItem(LIKED_RECIPES_KEY, JSON.stringify(updated));
+      } catch {}
+    }
+    setLiked(false);
+    setShowConfirm(false);
+    navigate(-1); // 목록으로 이동
   };
 
   if (!recipe) {
@@ -264,11 +370,15 @@ export default function RecipeDetail() {
           aria-label="좋아요"
           title="좋아요"
           $active={liked}
-          onClick={handleLike}
-          disabled={liked}>
+          onClick={handleLike}>
           <Icon icon="mdi:star" width="32" height="32" />
         </StarButton>
       </ActionRow>
+      <ConfirmModal
+        open={showConfirm}
+        onConfirm={handleConfirmRemove}
+        onCancel={() => setShowConfirm(false)}
+      />
     </Container>
   );
 }

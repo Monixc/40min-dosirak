@@ -15,7 +15,7 @@ import type { Recipe } from "../types";
 import { generateRecipe } from "../services/openai";
 
 const Container = styled.div`
-  padding: 20px;
+  padding: 16px;
 `;
 
 const RECIPE_STORAGE_KEY = "recent_recipes";
